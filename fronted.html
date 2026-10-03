@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Ledger &amp; Vault Bank</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1b3a2e;
+        --ink-2: #274d3d;
+        --paper: #f2ecd8;
+        --paper-2: #e8dfc2;
+        --gold: #a9782f;
+        --line: #c9bd97;
+        --red: #8a2f2f;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --ink: #e8dfc2;
+          --ink-2: #c9bd97;
+          --paper: #122019;
+          --paper-2: #182a21;
+          --gold: #d1a24a;
+          --line: #2c4536;
+          --red: #e08a8a;
+        }
+      }
+      :root[data-theme="dark"] {
+        --ink: #e8dfc2;
+        --ink-2: #c9bd97;
+        --paper: #122019;
+        --paper-2: #182a21;
+        --gold: #d1a24a;
+        --line: #2c4536;
+        --red: #e08a8a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "IBM Plex Mono", monospace;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 28px 20px 60px;
+      }
+      .brand {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 14px;
+        margin-bottom: 22px;
+      }
+      .brand h1 {
+        font-family: "Fraunces", serif;
+        font-weight: 700;
+        font-size: 1.7rem;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .brand span {
+        font-size: 0.72rem;
+        color: var(--gold);
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 22px;
+      }
+      nav button {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.78rem;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        background: var(--paper-2);
+        color: var(--ink);
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      nav button.active {
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      .card {
+        border: 1px solid var(--line);
+        background: var(--paper-2);
+        border-radius: 2px;
+        padding: 20px;
+        margin-bottom: 18px;
+      }
+      .card h2 {
+        font-family: "Fraunces", serif;
+        font-size: 1.15rem;
+        margin: 0 0 14px;
+        font-weight: 600;
+      }
+      label {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--ink-2);
+        margin: 12px 0 4px;
+      }
+      input {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85rem;
+        border-radius: 2px;
+      }
+      input:focus {
+        outline: 2px solid var(--gold);
+        outline-offset: 1px;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .row > div {
+        flex: 1;
+        min-width: 140px;
+      }
+      .actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button.primary {
+        font-family: "IBM Plex Mono", monospace;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 10px 18px;
+        background: var(--ink);
+        color: var(--paper);
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      button.danger {
+        background: var(--red);
+      }
+      button.primary:active {
+        opacity: 0.85;
+      }
+      .receipt {
+        border: 1px dashed var(--line);
+        padding: 16px;
+        margin-top: 16px;
+        background: var(--paper);
+        font-size: 0.82rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        overflow-x: auto;
+      }
+      .receipt.err {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .receipt .k {
+        color: var(--gold);
+      }
+      .hint {
+        font-size: 0.7rem;
+        color: var(--ink-2);
+        margin-top: 6px;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand">
+        <h1>Ledger &amp; Vault</h1>
+        <span>ACCOUNT SERVICES</span>
+      </div>
+
+      <nav id="nav"></nav>
+
+      <div id="panels"></div>
+    </div>
+
+    <script>
+      const KEY = "ledger_vault_accounts";
+      const load = () => {
+        try {
+          return JSON.parse(localStorage.getItem(KEY)) || [];
+        } catch (e) {
+          return [];
+        }
+      };
+      const save = (d) => {
+        try {
+          localStorage.setItem(KEY, JSON.stringify(d));
+        } catch (e) {}
+      };
+      let accounts = load();
+
+      function genAccountNo() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        const digits = "0123456789";
+        const special = "!@#$%^&*";
+        let pool = [];
+        for (let i = 0; i < 3; i++)
+          pool.push(letters[Math.floor(Math.random() * letters.length)]);
+        for (let i = 0; i < 3; i++)
+          pool.push(digits[Math.floor(Math.random() * digits.length)]);
+        pool.push(special[Math.floor(Math.random() * special.length)]);
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        return pool.join("");
+      }
+
+      function findAccount(no, pin) {
+        return accounts.find((a) => a.accountNo === no && a.pin === pin);
+      }
+
+      const tabs = [
+        { id: "create", label: "Open account" },
+        { id: "deposit", label: "Deposit" },
+        { id: "withdraw", label: "Withdraw" },
+        { id: "details", label: "View details" },
+        { id: "update", label: "Update details" },
+        { id: "delete", label: "Close account" },
+      ];
+
+      const nav = document.getElementById("nav");
+      tabs.forEach((t) => {
+        const b = document.createElement("button");
+        b.textContent = t.label;
+        b.dataset.id = t.id;
+        b.onclick = () => showTab(t.id);
+        nav.appendChild(b);
+      });
+
+      function showTab(id) {
+        document
+          .querySelectorAll("nav button")
+          .forEach((b) => b.classList.toggle("active", b.dataset.id === id));
+        document
+          .querySelectorAll(".card")
+          .forEach((c) => c.classList.toggle("hidden", c.dataset.tab !== id));
+      }
+
+      function receipt(el, lines, isErr) {
+        el.className = "receipt" + (isErr ? " err" : "");
+        el.textContent = lines.join("\n");
+        el.classList.remove("hidden");
+      }
+
+      const panels = document.getElementById("panels");
+      panels.innerHTML = `
+<div class="card" data-tab="create">
+  <h2>Open a new account</h2>
+  <label>Full name</label><input id="c-name">
+  <div class="row">
+    <div><label>Age</label><input id="c-age" type="number" min="0"></div>
+    <div><label>4-digit PIN</label><input id="c-pin" type="number"></div>
+  </div>
+  <label>Email</label><input id="c-email" type="email">
+  <div class="actions"><button class="primary" onclick="doCreate()">Open account</button></div>
+  <div class="hint">Must be 18+ with a 4-digit PIN.</div>
+  <div id="c-out" class="receipt hidden"></div>
+</div>
+
+<div class="card data-tab hidden" data-tab="deposit">
+  <h2>Deposit money</h2>
+  <div class="row">
+    <div><label>Account number</label><input id="d-no"></div>
+    <div><label>PIN</label><input id="d-pin" type="number"></div>
+  </div>
+  <label>Amount (up to 10,000)</label><input id="d-amt" type="number">
+  <div class="actions"><button class="primary" onclick="doDeposit()">Deposit</button></div>
+  <div id="d-out" class="receipt hidden"></div>
+</div>
+
+<div class="card hidden" data-tab="withdraw">
+  <h2>Withdraw money</h2>
+  <div class="row">
+    <div><label>Account number</label><input id="w-no"></div>
+    <div><label>PIN</label><input id="w-pin" type="number"></div>
+  </div>
+  <label>Amount</label><input id="w-amt" type="number">
+  <div class="actions"><button class="primary" onclick="doWithdraw()">Withdraw</button></div>
+  <div id="w-out" class="receipt hidden"></div>
+</div>
+
+<div class="card hidden" data-tab="details">
+  <h2>View account details</h2>
+  <div class="row">
+    <div><label>Account number</label><input id="v-no"></div>
+    <div><label>PIN</label><input id="v-pin" type="number"></div>
+  </div>
+  <div class="actions"><button class="primary" onclick="doDetails()">Look up</button></div>
+  <div id="v-out" class="receipt hidden"></div>
+</div>
+
+<div class="card hidden" data-tab="update">
+  <h2>Update details</h2>
+  <div class="row">
+    <div><label>Account number</label><input id="u-no"></div>
+    <div><label>Current PIN</label><input id="u-pin" type="number"></div>
+  </div>
+  <label>New name (leave blank to keep)</label><input id="u-name">
+  <label>New email (leave blank to keep)</label><input id="u-email">
+  <label>New PIN (leave blank to keep)</label><input id="u-newpin" type="number">
+  <div class="hint">Age, account number and balance cannot be changed.</div>
+  <div class="actions"><button class="primary" onclick="doUpdate()">Save changes</button></div>
+  <div id="u-out" class="receipt hidden"></div>
+</div>
+
+<div class="card hidden" data-tab="delete">
+  <h2>Close account</h2>
+  <div class="row">
+    <div><label>Account number</label><input id="x-no"></div>
+    <div><label>PIN</label><input id="x-pin" type="number"></div>
+  </div>
+  <div class="actions"><button class="danger primary" onclick="doDelete()">Close account permanently</button></div>
+  <div id="x-out" class="receipt hidden"></div>
+</div>
+`;
+      showTab("create");
+
+      function doCreate() {
+        const name = document.getElementById("c-name").value.trim();
+        const age = parseInt(document.getElementById("c-age").value, 10);
+        const email = document.getElementById("c-email").value.trim();
+        const pin = document.getElementById("c-pin").value.trim();
+        const out = document.getElementById("c-out");
+
+        if (!name || !email || isNaN(age) || pin.length !== 4) {
+          receipt(
+            out,
+            [
+              "Cannot open account.",
+              "Check that name, email, age and a 4-digit PIN are all filled in.",
+            ],
+            true,
+          );
+          return;
+        }
+        if (age < 18) {
+          receipt(
+            out,
+            ["Cannot open account.", "Account holder must be 18 or older."],
+            true,
+          );
+          return;
+        }
+        const acc = {
+          name,
+          age,
+          email,
+          pin,
+          accountNo: genAccountNo(),
+          balance: 0,
+        };
+        accounts.push(acc);
+        save(accounts);
+        receipt(out, [
+          "Account opened successfully.",
+          "",
+          `name        : ${acc.name}`,
+          `age         : ${acc.age}`,
+          `email       : ${acc.email}`,
+          `account no. : ${acc.accountNo}`,
+          `balance     : ${acc.balance}`,
+          "",
+          "Please note down your account number.",
+        ]);
+        document.getElementById("c-name").value = "";
+        document.getElementById("c-age").value = "";
+        document.getElementById("c-email").value = "";
+        document.getElementById("c-pin").value = "";
+      }
+
+      function doDeposit() {
+        const no = document.getElementById("d-no").value.trim();
+        const pin = document.getElementById("d-pin").value.trim();
+        const amt = parseInt(document.getElementById("d-amt").value, 10);
+        const out = document.getElementById("d-out");
+        const acc = findAccount(no, pin);
+        if (!acc) {
+          receipt(out, ["No matching account found."], true);
+          return;
+        }
+        if (isNaN(amt) || amt <= 0 || amt > 10000) {
+          receipt(
+            out,
+            ["Deposit not made.", "Enter an amount between 1 and 10,000."],
+            true,
+          );
+          return;
+        }
+        acc.balance += amt;
+        save(accounts);
+        receipt(out, ["Deposit successful.", `new balance : ${acc.balance}`]);
+      }
+
+      function doWithdraw() {
+        const no = document.getElementById("w-no").value.trim();
+        const pin = document.getElementById("w-pin").value.trim();
+        const amt = parseInt(document.getElementById("w-amt").value, 10);
+        const out = document.getElementById("w-out");
+        const acc = findAccount(no, pin);
+        if (!acc) {
+          receipt(out, ["No matching account found."], true);
+          return;
+        }
+        if (isNaN(amt) || amt <= 0) {
+          receipt(out, ["Enter a positive amount."], true);
+          return;
+        }
+        if (amt > acc.balance) {
+          receipt(
+            out,
+            ["Insufficient balance.", `current balance : ${acc.balance}`],
+            true,
+          );
+          return;
+        }
+        acc.balance -= amt;
+        save(accounts);
+        receipt(out, [
+          "Withdrawal successful.",
+          `new balance : ${acc.balance}`,
+        ]);
+      }
+
+      function doDetails() {
+        const no = document.getElementById("v-no").value.trim();
+        const pin = document.getElementById("v-pin").value.trim();
+        const out = document.getElementById("v-out");
+        const acc = findAccount(no, pin);
+        if (!acc) {
+          receipt(out, ["No matching account found."], true);
+          return;
+        }
+        receipt(out, [
+          `name        : ${acc.name}`,
+          `age         : ${acc.age}`,
+          `email       : ${acc.email}`,
+          `account no. : ${acc.accountNo}`,
+          `balance     : ${acc.balance}`,
+        ]);
+      }
+
+      function doUpdate() {
+        const no = document.getElementById("u-no").value.trim();
+        const pin = document.getElementById("u-pin").value.trim();
+        const out = document.getElementById("u-out");
+        const acc = findAccount(no, pin);
+        if (!acc) {
+          receipt(out, ["No matching account found."], true);
+          return;
+        }
+
+        const newName = document.getElementById("u-name").value.trim();
+        const newEmail = document.getElementById("u-email").value.trim();
+        const newPin = document.getElementById("u-newpin").value.trim();
+
+        if (newPin && newPin.length !== 4) {
+          receipt(out, ["New PIN must be exactly 4 digits."], true);
+          return;
+        }
+        if (newName) acc.name = newName;
+        if (newEmail) acc.email = newEmail;
+        if (newPin) acc.pin = newPin;
+        save(accounts);
+        receipt(out, [
+          "Details updated successfully.",
+          "",
+          `name        : ${acc.name}`,
+          `email       : ${acc.email}`,
+          `pin         : ${acc.pin}`,
+        ]);
+        document.getElementById("u-name").value = "";
+        document.getElementById("u-email").value = "";
+        document.getElementById("u-newpin").value = "";
+      }
+
+      function doDelete() {
+        const no = document.getElementById("x-no").value.trim();
+        const pin = document.getElementById("x-pin").value.trim();
+        const out = document.getElementById("x-out");
+        const idx = accounts.findIndex(
+          (a) => a.accountNo === no && a.pin === pin,
+        );
+        if (idx === -1) {
+          receipt(out, ["No matching account found."], true);
+          return;
+        }
+        accounts.splice(idx, 1);
+        save(accounts);
+        receipt(out, ["Account closed successfully."]);
+      }
+    </script>
+  </body>
+</html>
